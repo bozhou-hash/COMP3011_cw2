@@ -4,15 +4,16 @@ import os
 from src.crawler import WebCrawler
 from src.indexer import InvertedIndexer
 from src.search import SearchEngine
+from pathlib import Path
 
 
-DATA_FOLDER = "../data"
-INDEX_FILE = os.path.join(DATA_FOLDER, "index.json")
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_FOLDER = PROJECT_ROOT / "data"
+INDEX_FILE = DATA_FOLDER / "index.json"
 
 
 def ensure_data_folder():
-    if not os.path.exists(DATA_FOLDER):
-        os.makedirs(DATA_FOLDER)
+    DATA_FOLDER.mkdir(exist_ok=True)
 
 
 def save_index(index):
@@ -21,18 +22,17 @@ def save_index(index):
     with open(INDEX_FILE, "w", encoding="utf-8") as file:
         json.dump(index, file, indent=4)
 
-    print("Index saved successfully.")
-
+    print(f"Index saved successfully to {INDEX_FILE}")
 
 def load_index():
-    if not os.path.exists(INDEX_FILE):
+    if not INDEX_FILE.exists():
         print("No saved index found. Run build first.")
         return None
 
     with open(INDEX_FILE, "r", encoding="utf-8") as file:
         index = json.load(file)
 
-    print("Index loaded successfully.")
+    print(f"Index loaded successfully from {INDEX_FILE}")
     return index
 
 
