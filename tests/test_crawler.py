@@ -1,3 +1,4 @@
+import requests
 from unittest.mock import patch, Mock
 from bs4 import BeautifulSoup
 from src.crawler import WebCrawler
@@ -41,7 +42,7 @@ def test_fetch_page_success(mock_get, mock_sleep):
 
 @patch("src.crawler.requests.get")
 def test_fetch_page_failure(mock_get):
-    mock_get.side_effect = Exception("Network error")
+    mock_get.side_effect = requests.RequestException("Network error")
 
     crawler = WebCrawler()
     soup = crawler.fetch_page("https://example.com")
