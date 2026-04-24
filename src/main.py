@@ -65,7 +65,7 @@ def shell():
     loaded_index = None
 
     print("COMP3011 Search Engine Tool")
-    print("Commands: build, load, print <word>, find <query>, exit")
+    print("Commands: build, load, print <word>, find <query>, find \"phrase query\", exit")
 
     while True:
         command = input("\n> ").strip()
@@ -97,6 +97,7 @@ def shell():
             engine = SearchEngine(loaded_index)
             engine.print_word(word)
 
+
         elif command.startswith("find "):
             if loaded_index is None:
                 print("Load index first.")
@@ -109,7 +110,12 @@ def shell():
                 continue
 
             engine = SearchEngine(loaded_index)
-            engine.find(query)
+
+            if query.startswith('"') and query.endswith('"'):
+                phrase = query[1:-1]
+                engine.find_phrase(phrase)
+            else:
+                engine.find(query)
 
         else:
             print("Unknown command.")
