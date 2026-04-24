@@ -21,7 +21,7 @@ class WebCrawler:
 
             return BeautifulSoup(response.text, "html.parser")
 
-        except requests.RequestException as error:
+        except Exception as error:
             print(f"Error fetching {url}: {error}")
             return None
 
