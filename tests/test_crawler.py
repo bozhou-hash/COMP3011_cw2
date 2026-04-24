@@ -73,6 +73,7 @@ def test_get_next_page_missing():
 
     assert next_page is None
 
+
 def test_extract_text_with_none_soup():
     crawler = WebCrawler()
 
