@@ -193,6 +193,6 @@ def test_page_contains_phrase_true():
 def test_page_contains_phrase_false():
     engine = SearchEngine(sample_index())
 
-    result = engine.page_contains_phrase("page4", ["hello", "world"])
+    result = engine.page_contains_phrase("page5", ["hello", "world"])
 
-    assert result is True
+    assert result is False

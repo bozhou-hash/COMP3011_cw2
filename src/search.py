@@ -158,6 +158,15 @@ class SearchEngine:
         """
         Check whether words appear consecutively on a page using stored positions.
         """
+        if not words:
+            return False
+
+        if words[0] not in self.index:
+            return False
+
+        if page not in self.index[words[0]]:
+            return False
+
         first_word_positions = self.index[words[0]][page]["positions"]
 
         for start_position in first_word_positions:
@@ -165,6 +174,15 @@ class SearchEngine:
 
             for offset, word in enumerate(words[1:], start=1):
                 expected_position = start_position + offset
+
+                if word not in self.index:
+                    phrase_found = False
+                    break
+
+                if page not in self.index[word]:
+                    phrase_found = False
+                    break
+
                 word_positions = self.index[word][page]["positions"]
 
                 if expected_position not in word_positions:
