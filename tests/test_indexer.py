@@ -1,59 +1,68 @@
-from src.search import SearchEngine
+from src.indexer import InvertedIndexer
 
 
-def sample_index():
-    return {
-        "good": {
-            "page1": {"freq": 2, "positions": [0, 4]},
-            "page2": {"freq": 1, "positions": [2]}
-        },
-        "friends": {
-            "page1": {"freq": 1, "positions": [5]},
-            "page3": {"freq": 3, "positions": [1, 2, 3]}
-        },
-        "life": {
-            "page2": {"freq": 1, "positions": [0]}
-        }
+def test_tokenize_basic():
+    indexer = InvertedIndexer()
+
+    words = indexer.tokenize("Hello World!")
+
+    assert words == ["hello", "world"]
+
+
+def test_tokenize_case_insensitive():
+    indexer = InvertedIndexer()
+
+    words = indexer.tokenize("Good GOOD good")
+
+    assert words == ["good", "good", "good"]
+
+
+def test_tokenize_empty_text():
+    indexer = InvertedIndexer()
+
+    words = indexer.tokenize("")
+
+    assert words == []
+
+
+def test_add_page_frequency():
+    indexer = InvertedIndexer()
+
+    indexer.add_page("page1", "life is life")
+
+    entry = indexer.get_word_entry("life")
+
+    assert entry["page1"]["freq"] == 2
+
+
+def test_add_page_positions():
+    indexer = InvertedIndexer()
+
+    indexer.add_page("page1", "one two one")
+
+    entry = indexer.get_word_entry("one")
+
+    assert entry["page1"]["positions"] == [0, 2]
+
+
+def test_build_index():
+    indexer = InvertedIndexer()
+
+    data = {
+        "page1": "hello world",
+        "page2": "hello python"
     }
 
+    index = indexer.build_index(data)
 
-def test_find_single_word():
-    engine = SearchEngine(sample_index())
-
-    results = engine.find("life")
-
-    assert len(results) == 1
-    assert results[0][0] == "page2"
+    assert "hello" in index
+    assert "world" in index
+    assert "python" in index
 
 
-def test_find_multiple_words():
-    engine = SearchEngine(sample_index())
+def test_get_missing_word_entry():
+    indexer = InvertedIndexer()
 
-    results = engine.find("good friends")
+    entry = indexer.get_word_entry("missing")
 
-    assert len(results) == 1
-    assert results[0][0] == "page1"
-
-
-def test_find_missing_word():
-    engine = SearchEngine(sample_index())
-
-    results = engine.find("unknown")
-
-    assert results == []
-
-
-def test_find_partial_missing():
-    engine = SearchEngine(sample_index())
-
-    results = engine.find("good unknown")
-
-    assert results == []
-
-
-def test_case_insensitive_search():
-    engine = SearchEngine(sample_index())
-
-    results = engine.find("GOOD")
-
-    assert len(results) == 2
+    assert entry == {}
