@@ -1,75 +1,140 @@
-from unittest.mock import patch, Mock
-from src.crawler import WebCrawler
+from src.search import SearchEngine
 
 
-def test_extract_text():
-    crawler = WebCrawler()
-
-    html = """
-    <html>
-        <body>
-            <div class="quote">
-                <span class="text">Hello world</span>
-                <small class="author">Calvin</small>
-                <a class="tag">life</a>
-                <a class="tag">truth</a>
-            </div>
-        </body>
-    </html>
-    """
-
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
-
-    text = crawler.extract_text(soup)
-
-    assert "Hello world" in text
-    assert "Calvin" in text
-    assert "life" in text
-    assert "truth" in text
+def sample_index():
+    return {
+        "good": {
+            "page1": {"freq": 2, "positions": [0, 4]},
+            "page2": {"freq": 1, "positions": [2]}
+        },
+        "friends": {
+            "page1": {"freq": 1, "positions": [5]},
+            "page3": {"freq": 3, "positions": [1, 2, 3]}
+        },
+        "life": {
+            "page2": {"freq": 1, "positions": [0]}
+        },
+        "hello": {
+            "page4": {"freq": 1, "positions": [0]}
+        },
+        "world": {
+            "page4": {"freq": 1, "positions": [1]},
+            "page5": {"freq": 1, "positions": [3]}
+        }
+    }
 
 
-@patch("src.crawler.time.sleep")
-@patch("src.crawler.requests.get")
-def test_fetch_page_success(mock_get, mock_sleep):
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.text = "<html></html>"
-    mock_response.raise_for_status.return_value = None
+def test_normalise_query_lowercase():
+    engine = SearchEngine(sample_index())
 
-    mock_get.return_value = mock_response
+    result = engine.normalise_query("GOOD Friends!")
 
-    crawler = WebCrawler()
-    soup = crawler.fetch_page("https://example.com")
-
-    assert soup is not None
-    mock_sleep.assert_called_once()
+    assert result == ["good", "friends"]
 
 
-@patch("src.crawler.requests.get")
-def test_fetch_page_failure(mock_get):
-    mock_get.side_effect = Exception("Network error")
+def test_normalise_query_empty():
+    engine = SearchEngine(sample_index())
 
-    crawler = WebCrawler()
-    soup = crawler.fetch_page("https://example.com")
+    result = engine.normalise_query("")
 
-    assert soup is None
+    assert result == []
 
 
-def test_get_next_page():
-    crawler = WebCrawler()
+def test_find_single_word():
+    engine = SearchEngine(sample_index())
 
-    html = """
-    <html>
-        <li class="next">
-            <a href="/page/2/">Next</a>
-        </li>
-    </html>
-    """
+    results = engine.find("life")
 
-    from bs4 import BeautifulSoup
-    soup = BeautifulSoup(html, "html.parser")
+    assert len(results) == 1
+    assert results[0][0] == "page2"
 
-    next_page = crawler.get_next_page(soup)
 
-    assert next_page == "https://quotes.toscrape.com/page/2/"
+def test_find_multiple_words():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find("good friends")
+
+    assert len(results) == 1
+    assert results[0][0] == "page1"
+
+
+def test_find_missing_word():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find("unknown")
+
+    assert results == []
+
+
+def test_find_partial_missing():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find("good unknown")
+
+    assert results == []
+
+
+def test_find_empty_query():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find("")
+
+    assert results == []
+
+
+def test_case_insensitive_search():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find("GOOD")
+
+    assert len(results) == 2
+
+
+def test_find_results_are_ranked():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find("good")
+
+    assert results[0][1] >= results[1][1]
+
+
+def test_find_phrase_success():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find_phrase("good friends")
+
+    assert len(results) == 1
+    assert results[0][0] == "page1"
+
+
+def test_find_phrase_not_adjacent():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find_phrase("friends good")
+
+    assert results == []
+
+
+def test_find_phrase_single_word():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find_phrase("life")
+
+    assert len(results) == 1
+    assert results[0][0] == "page2"
+
+
+def test_find_phrase_missing_word():
+    engine = SearchEngine(sample_index())
+
+    results = engine.find_phrase("good unknown")
+
+    assert results == []
+
+
+def test_get_total_page_count():
+    engine = SearchEngine(sample_index())
+
+    total_pages = engine.get_total_page_count()
+
+    assert total_pages == 5
