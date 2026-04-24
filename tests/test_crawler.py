@@ -1,52 +1,73 @@
-from src.indexer import InvertedIndexer
+from unittest.mock import patch, Mock
+from bs4 import BeautifulSoup
+from src.crawler import WebCrawler
 
 
-def test_tokenize_basic():
-    indexer = InvertedIndexer()
+def test_extract_text():
+    crawler = WebCrawler()
 
-    words = indexer.tokenize("Hello World!")
+    html = """
+    <div class="quote">
+        <span class="text">Hello world</span>
+        <small class="author">Calvin</small>
+        <a class="tag">life</a>
+        <a class="tag">truth</a>
+    </div>
+    """
 
-    assert words == ["hello", "world"]
+    soup = BeautifulSoup(html, "html.parser")
+    text = crawler.extract_text(soup)
 
-
-def test_tokenize_case_insensitive():
-    indexer = InvertedIndexer()
-
-    words = indexer.tokenize("Good GOOD good")
-
-    assert words == ["good", "good", "good"]
-
-
-def test_add_page_frequency():
-    indexer = InvertedIndexer()
-
-    indexer.add_page("page1", "life is life")
-
-    entry = indexer.get_word_entry("life")
-
-    assert entry["page1"]["freq"] == 2
+    assert "Hello world" in text
+    assert "Calvin" in text
+    assert "life" in text
+    assert "truth" in text
 
 
-def test_add_page_positions():
-    indexer = InvertedIndexer()
+@patch("src.crawler.time.sleep")
+@patch("src.crawler.requests.get")
+def test_fetch_page_success(mock_get, mock_sleep):
+    mock_response = Mock()
+    mock_response.text = "<html></html>"
+    mock_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_response
 
-    indexer.add_page("page1", "one two one")
+    crawler = WebCrawler()
+    soup = crawler.fetch_page("https://example.com")
 
-    entry = indexer.get_word_entry("one")
+    assert soup is not None
+    mock_sleep.assert_called_once()
 
-    assert entry["page1"]["positions"] == [0, 2]
+
+@patch("src.crawler.requests.get")
+def test_fetch_page_failure(mock_get):
+    mock_get.side_effect = Exception("Network error")
+
+    crawler = WebCrawler()
+    soup = crawler.fetch_page("https://example.com")
+
+    assert soup is None
 
 
-def test_build_index():
-    indexer = InvertedIndexer()
+def test_get_next_page():
+    crawler = WebCrawler()
 
-    data = {
-        "page1": "hello world",
-        "page2": "hello python"
-    }
+    html = """
+    <li class="next">
+        <a href="/page/2/">Next</a>
+    </li>
+    """
 
-    index = indexer.build_index(data)
+    soup = BeautifulSoup(html, "html.parser")
+    next_page = crawler.get_next_page(soup)
 
-    assert "hello" in index
-    assert "world" in index
-    assert "python" in index
+    assert next_page == "https://quotes.toscrape.com/page/2/"
+
+
+def test_get_next_page_missing():
+    crawler = WebCrawler()
+
+    soup = BeautifulSoup("<html></html>", "html.parser")
+    next_page = crawler.get_next_page(soup)
+
+    assert next_page is None
