@@ -138,3 +138,61 @@ def test_get_total_page_count():
     total_pages = engine.get_total_page_count()
 
     assert total_pages == 5
+
+
+def test_print_word_existing_word():
+    engine = SearchEngine(sample_index())
+
+    entry = engine.print_word("good")
+
+    assert "page1" in entry
+    assert "page2" in entry
+
+
+def test_print_word_missing_word():
+    engine = SearchEngine(sample_index())
+
+    entry = engine.print_word("unknown")
+
+    assert entry == {}
+
+
+def test_get_pages_containing_all_words():
+    engine = SearchEngine(sample_index())
+
+    pages = engine.get_pages_containing_all_words(["good", "friends"])
+
+    assert pages == {"page1"}
+
+
+def test_rank_pages_returns_sorted_results():
+    engine = SearchEngine(sample_index())
+
+    results = engine.rank_pages(["good"], {"page1", "page2"})
+
+    assert results[0][1] >= results[1][1]
+
+
+def test_calculate_tfidf_score_returns_positive_value():
+    engine = SearchEngine(sample_index())
+
+    total_pages = engine.get_total_page_count()
+    score = engine.calculate_tfidf_score("good", "page1", total_pages)
+
+    assert score > 0
+
+
+def test_page_contains_phrase_true():
+    engine = SearchEngine(sample_index())
+
+    result = engine.page_contains_phrase("page1", ["good", "friends"])
+
+    assert result is True
+
+
+def test_page_contains_phrase_false():
+    engine = SearchEngine(sample_index())
+
+    result = engine.page_contains_phrase("page4", ["hello", "world"])
+
+    assert result is True
