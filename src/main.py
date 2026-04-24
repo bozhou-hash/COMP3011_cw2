@@ -1,9 +1,9 @@
 import json
 import os
 
-from crawler import WebCrawler
-from indexer import InvertedIndexer
-from search import SearchEngine
+from src.crawler import WebCrawler
+from src.indexer import InvertedIndexer
+from src.search import SearchEngine
 
 
 DATA_FOLDER = "../data"
