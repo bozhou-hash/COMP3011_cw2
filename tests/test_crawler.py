@@ -10,7 +10,7 @@ def test_extract_text():
     html = """
     <div class="quote">
         <span class="text">Hello world</span>
-        <small class="author">Calvin</small>
+        <small class="author">Albert Einstein</small>
         <a class="tag">life</a>
         <a class="tag">truth</a>
     </div>
@@ -20,7 +20,7 @@ def test_extract_text():
     text = crawler.extract_text(soup)
 
     assert "Hello world" in text
-    assert "Calvin" in text
+    assert "Albert Einstein" in text
     assert "life" in text
     assert "truth" in text
 
@@ -72,3 +72,20 @@ def test_get_next_page_missing():
     next_page = crawler.get_next_page(soup)
 
     assert next_page is None
+
+def test_extract_text_with_none_soup():
+    crawler = WebCrawler()
+
+    text = crawler.extract_text(None)
+
+    assert text == ""
+
+
+@patch.object(WebCrawler, "fetch_page")
+def test_crawl_all_pages_stops_when_fetch_fails(mock_fetch_page):
+    mock_fetch_page.return_value = None
+
+    crawler = WebCrawler()
+    result = crawler.crawl_all_pages()
+
+    assert result == {}
