@@ -13,10 +13,6 @@ class WebCrawler:
         self.visited_pages = set()
 
     def fetch_page(self, url):
-        """
-        Downloads a webpage and returns BeautifulSoup object.
-        Respects politeness delay.
-        """
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()
@@ -30,9 +26,6 @@ class WebCrawler:
             return None
 
     def extract_text(self, soup):
-        """
-        Extract visible quote text + authors + tags.
-        """
         if soup is None:
             return ""
 
@@ -57,9 +50,6 @@ class WebCrawler:
         return " ".join(page_text)
 
     def get_next_page(self, soup):
-        """
-        Returns next page URL if exists.
-        """
         if soup is None:
             return None
 
@@ -73,13 +63,6 @@ class WebCrawler:
         return None
 
     def crawl_all_pages(self):
-        """
-        Crawl all pages starting from homepage.
-        Returns dictionary:
-        {
-            url: page_text
-        }
-        """
         current_url = BASE_URL
         crawled_data = {}
 
