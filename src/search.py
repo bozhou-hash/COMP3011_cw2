@@ -1,8 +1,14 @@
 class SearchEngine:
     def __init__(self, index):
+        """
+        index = inverted index dictionary
+        """
         self.index = index
 
     def print_word(self, word):
+        """
+        Print postings list for a single word.
+        """
         word = word.lower()
 
         if word not in self.index:
@@ -17,6 +23,9 @@ class SearchEngine:
             print(f"  Positions: {stats['positions']}")
 
     def find(self, query):
+        """
+        Search pages containing all query words.
+        """
         words = query.lower().split()
 
         if not words:

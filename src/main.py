@@ -13,10 +13,16 @@ INDEX_FILE = DATA_FOLDER / "index.json"
 
 
 def ensure_data_folder():
+    """
+    Create data folder if missing.
+    """
     DATA_FOLDER.mkdir(exist_ok=True)
 
 
 def save_index(index):
+    """
+    Save index to JSON file.
+    """
     ensure_data_folder()
 
     with open(INDEX_FILE, "w", encoding="utf-8") as file:
@@ -25,6 +31,9 @@ def save_index(index):
     print(f"Index saved successfully to {INDEX_FILE}")
 
 def load_index():
+    """
+    Load index from JSON file.
+    """
     if not INDEX_FILE.exists():
         print("No saved index found. Run build first.")
         return None
@@ -37,6 +46,9 @@ def load_index():
 
 
 def build_command():
+    """
+    Crawl website + build index + save file.
+    """
     crawler = WebCrawler()
     pages = crawler.crawl_all_pages()
 
@@ -47,6 +59,9 @@ def build_command():
 
 
 def shell():
+    """
+    Command line interface.
+    """
     loaded_index = None
 
     print("COMP3011 Search Engine Tool")
